@@ -1,0 +1,17 @@
+# VS Code
+.vscode/
+
+# Java
+*.class
+target/
+out/
+
+# Logs
+*.log
+
+# Docker
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
