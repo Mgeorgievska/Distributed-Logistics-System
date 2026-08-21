@@ -1,0 +1,11 @@
+shipmentId,routeCode,origin,destination,weight,status
+1001,MK-SK-001,Skopje,Belgrade,520,CREATED
+1002,MK-GR-002,Skopje,Thessaloniki,340,CREATED
+1003,MK-RS-003,Skopje,Nis,710,IN_TRANSIT
+1004,DE-MK-004,Berlin,Skopje,1200,CREATED
+1005,MK-HR-005,Skopje,Zagreb,450,IN_TRANSIT
+1006,MK-BG-006,Skopje,Sofia,680,CREATED
+1007,MK-AL-007,Skopje,Tirana,390,DELIVERED
+1008,IT-MK-008,Milan,Skopje,950,IN_TRANSIT
+1009,MK-AT-009,Skopje,Vienna,1100,CREATED
+1010,MK-HU-010,Skopje,Budapest,870,CREATED
