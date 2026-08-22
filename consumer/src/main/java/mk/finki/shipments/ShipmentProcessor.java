@@ -4,29 +4,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ShipmentProcessor {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static void process(String shipmentJson) {
+    public static ProcessingResult process(String json) {
 
-        long start = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         try {
-            // Convert JSON to Shipment object
-            Shipment shipment =
-                    mapper.readValue(shipmentJson, Shipment.class);
 
-            // Basic shipment validation
+            // Convert JSON string to Shipment object
+            Shipment shipment = objectMapper.readValue(json, Shipment.class);
+
+            // Validate shipment
             boolean valid = validateShipment(shipment);
 
-            // Calculate a processing score
-            double processingScore =
-                    calculateProcessingScore(shipment);
+            // Calculate shipment score
+            double score = calculateScore(shipment);
 
-            long end = System.currentTimeMillis();
+            // Simulate processing work
+            Thread.sleep(100);
+
+            long processingTime =
+                    System.currentTimeMillis() - startTime;
 
             System.out.println(
-                    "Processed shipment:"
-                            + " ID=" + shipment.getShipmentId()
+                    "Processed shipment: "
+                            + "ID=" + shipment.getShipmentId()
                             + " | Route=" + shipment.getRouteCode()
                             + " | " + shipment.getOrigin()
                             + " -> " + shipment.getDestination()
@@ -34,47 +37,96 @@ public class ShipmentProcessor {
                             + " kg"
                             + " | Status=" + shipment.getStatus()
                             + " | Valid=" + valid
-                            + " | Score=" + processingScore
+                            + " | Score=" + score
                             + " | Thread=" + Thread.currentThread().getName()
-                            + " | Time=" + (end - start) + " ms"
+                            + " | Time=" + processingTime + " ms"
+            );
+
+            return new ProcessingResult(
+                    shipment.getShipmentId(),
+                    valid,
+                    score,
+                    processingTime,
+                    Thread.currentThread().getName()
             );
 
         } catch (Exception e) {
 
-            System.err.println(
+            System.out.println(
                     "Error processing shipment: "
-                            + shipmentJson
+                            + e.getMessage()
             );
 
-            e.printStackTrace();
+            return new ProcessingResult(
+                    -1,
+                    false,
+                    0.0,
+                    System.currentTimeMillis() - startTime,
+                    Thread.currentThread().getName()
+            );
         }
     }
 
     private static boolean validateShipment(Shipment shipment) {
 
-        return shipment.getShipmentId() > 0
-                && shipment.getRouteCode() != null
-                && !shipment.getRouteCode().isBlank()
-                && shipment.getOrigin() != null
-                && !shipment.getOrigin().isBlank()
-                && shipment.getDestination() != null
-                && !shipment.getDestination().isBlank()
-                && shipment.getWeight() > 0
-                && shipment.getStatus() != null;
+        if (shipment == null) {
+            return false;
+        }
+
+        if (shipment.getShipmentId() <= 0) {
+            return false;
+        }
+
+        if (shipment.getRouteCode() == null
+                || shipment.getRouteCode().isBlank()) {
+            return false;
+        }
+
+        if (shipment.getOrigin() == null
+                || shipment.getOrigin().isBlank()) {
+            return false;
+        }
+
+        if (shipment.getDestination() == null
+                || shipment.getDestination().isBlank()) {
+            return false;
+        }
+
+        if (shipment.getWeight() <= 0) {
+            return false;
+        }
+
+        if (shipment.getStatus() == null
+                || shipment.getStatus().isBlank()) {
+            return false;
+        }
+
+        return true;
     }
 
-    private static double calculateProcessingScore(Shipment shipment) {
+    private static double calculateScore(Shipment shipment) {
 
         double score = shipment.getWeight();
 
-        if ("DELIVERED".equalsIgnoreCase(shipment.getStatus())) {
-            score *= 0.8;
-        } else if ("IN_TRANSIT".equalsIgnoreCase(shipment.getStatus())) {
-            score *= 1.1;
-        } else if ("CREATED".equalsIgnoreCase(shipment.getStatus())) {
-            score *= 1.0;
+        switch (shipment.getStatus().toUpperCase()) {
+
+            case "DELIVERED":
+                score *= 0.8;
+                break;
+
+            case "IN_TRANSIT":
+                score *= 1.1;
+                break;
+
+            case "CREATED":
+                score *= 1.0;
+                break;
+
+            default:
+                score *= 0.5;
+                break;
         }
 
-        return Math.round(score * 100.0) / 100.0;
+        return score;
     }
 }

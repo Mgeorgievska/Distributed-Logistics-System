@@ -7,33 +7,102 @@ public class ProcessingBenchmark {
 
     public static void main(String[] args) {
 
-        List<String> shipments = new ArrayList<>();
-
-        // Create test shipments
-        for (int i = 1; i <= 20; i++) {
-            shipments.add(
-                    "{\"shipmentId\":" + i +
-                    ",\"routeCode\":\"TEST-" + i +
-                    "\",\"origin\":\"Skopje\"" +
-                    ",\"destination\":\"Belgrade\"" +
-                    ",\"weight\":500" +
-                    ",\"status\":\"CREATED\"}"
-            );
-        }
+        int[] testSizes = {10, 20, 50, 100, 200};
 
         System.out.println("=================================");
         System.out.println("SHIPMENT PROCESSING BENCHMARK");
-        System.out.println("Number of shipments: " + shipments.size());
         System.out.println("=================================");
 
-        // Sequential processing
-        SequentialProcessor.process(shipments);
+        for (int size : testSizes) {
 
-        // Parallel processing
-        ParallelProcessor.process(shipments);
+            System.out.println();
+            System.out.println("=================================");
+            System.out.println("TEST WITH " + size + " SHIPMENTS");
+            System.out.println("=================================");
 
-        System.out.println("\n=================================");
+            List<String> shipments = generateShipments(size);
+
+            // Sequential
+            long sequentialStart = System.currentTimeMillis();
+
+            SequentialProcessor.process(shipments);
+
+            long sequentialTime =
+                    System.currentTimeMillis() - sequentialStart;
+
+            // Parallel
+            long parallelStart = System.currentTimeMillis();
+
+            ParallelProcessor.process(shipments);
+
+            long parallelTime =
+                    System.currentTimeMillis() - parallelStart;
+
+            // Metrics
+            double speedup =
+                    (double) sequentialTime / parallelTime;
+
+            int threads =
+                    Runtime.getRuntime().availableProcessors();
+
+            double efficiency =
+                    (speedup / threads) * 100;
+
+            System.out.println();
+            System.out.println("----- RESULTS -----");
+            System.out.println("Shipments: " + size);
+            System.out.println(
+                    "Sequential time: "
+                            + sequentialTime
+                            + " ms"
+            );
+
+            System.out.println(
+                    "Parallel time: "
+                            + parallelTime
+                            + " ms"
+            );
+
+            System.out.printf(
+                    "Speedup: %.2fx%n",
+                    speedup
+            );
+
+            System.out.printf(
+                    "Efficiency: %.2f%%%n",
+                    efficiency
+            );
+
+            System.out.println(
+                    "Threads: " + threads
+            );
+        }
+
+        System.out.println();
+        System.out.println("=================================");
         System.out.println("BENCHMARK FINISHED");
         System.out.println("=================================");
+    }
+
+    private static List<String> generateShipments(int number) {
+
+        List<String> shipments = new ArrayList<>();
+
+        for (int i = 1; i <= number; i++) {
+
+            String shipment =
+                    "{"
+                            + "\"shipmentId\":" + i + ","
+                            + "\"routeCode\":\"TEST-" + i + "\","
+                            + "\"origin\":\"Skopje\","
+                            + "\"destination\":\"Belgrade\","
+                            + "\"weight\":500.0,"
+                            + "\"status\":\"CREATED\""
+                            + "}";
+
+            shipments.add(shipment);
+        }
+
+        return shipments;
     }
 }
