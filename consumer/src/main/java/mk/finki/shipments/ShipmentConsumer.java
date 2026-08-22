@@ -1,12 +1,13 @@
 package mk.finki.shipments;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -15,7 +16,6 @@ public class ShipmentConsumer {
     public static void main(String[] args) {
 
         Properties props = new Properties();
-        ObjectMapper mapper = new ObjectMapper();
 
         props.put(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -49,7 +49,9 @@ public class ShipmentConsumer {
                 Collections.singletonList("shipments.raw")
         );
 
-        System.out.println("Shipment Consumer started...");
+        System.out.println("=================================");
+        System.out.println("SHIPMENT KAFKA CONSUMER");
+        System.out.println("=================================");
         System.out.println("Waiting for shipments...");
 
         try {
@@ -59,40 +61,57 @@ public class ShipmentConsumer {
                 ConsumerRecords<String, String> records =
                         consumer.poll(Duration.ofMillis(1000));
 
+                if (records.isEmpty()) {
+                    continue;
+                }
+
+                List<String> shipments = new ArrayList<>();
+
                 for (ConsumerRecord<String, String> record : records) {
 
-    System.out.println("Received shipment:");
-    System.out.println("Partition: " + record.partition());
-    System.out.println("Offset: " + record.offset());
-    System.out.println("Key: " + record.key());
-    System.out.println("Value: " + record.value());
+                    System.out.println(
+                            "Received shipment from Kafka:"
+                    );
 
-    try {
-        Shipment shipment = mapper.readValue(
-                record.value(),
-                Shipment.class
-        );
+                    System.out.println(
+                            "Partition: " + record.partition()
+                    );
 
-        System.out.println("Parsed shipment:");
-        System.out.println("ID: " + shipment.getShipmentId());
-        System.out.println("Route: " + shipment.getRouteCode());
-        System.out.println("Origin: " + shipment.getOrigin());
-        System.out.println("Destination: " + shipment.getDestination());
-        System.out.println("Weight: " + shipment.getWeight());
-        System.out.println("Status: " + shipment.getStatus());
+                    System.out.println(
+                            "Offset: " + record.offset()
+                    );
 
-    } catch (Exception e) {
-        System.err.println("Failed to deserialize shipment:");
-        e.printStackTrace();
-    }
+                    System.out.println(
+                            "Key: " + record.key()
+                    );
 
-    System.out.println("--------------------------------");
-}
+                    System.out.println(
+                            "---------------------------------"
+                    );
+
+                    shipments.add(record.value());
+                }
+
+                System.out.println(
+                        "Shipments received in this batch: "
+                                + shipments.size()
+                );
+
+                // Process all received shipments in parallel
+                ParallelProcessor.process(shipments);
+
+                System.out.println(
+                        "================================="
+                );
             }
 
         } finally {
 
             consumer.close();
+
+            System.out.println(
+                    "Shipment Consumer stopped."
+            );
         }
     }
 }
