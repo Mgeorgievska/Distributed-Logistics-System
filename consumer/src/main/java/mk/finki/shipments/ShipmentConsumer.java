@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +97,9 @@ public class ShipmentConsumer {
                         "Shipments received in this batch: "
                                 + shipments.size()
                 );
+
+                // Process shipments sequentially
+                SequentialProcessor.process(shipments);
 
                 // Process all received shipments in parallel
                 ParallelProcessor.process(shipments);
