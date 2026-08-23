@@ -1,17 +1,19 @@
 package mk.finki.shipments;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class ShipmentProducer {
 
-    private static final String TOPIC = "shipments.raw";
+    public static void main(String[] args) {
 
-    public static void main(String[] args) throws Exception {
+        String topic = "shipments.raw";
 
         Properties props = new Properties();
 
@@ -30,44 +32,111 @@ public class ShipmentProducer {
                 "org.apache.kafka.common.serialization.StringSerializer"
         );
 
-        KafkaProducer<String, String> producer =
-                new KafkaProducer<>(props);
-
         ObjectMapper mapper = new ObjectMapper();
 
-        String filePath = "data/shipments.csv";
+        List<Shipment> shipments = new ArrayList<>();
 
-        try (BufferedReader reader =
-                     new BufferedReader(new FileReader(filePath))) {
+        shipments.add(new Shipment(
+                1001,
+                "MK-SK-001",
+                "Skopje",
+                "Belgrade",
+                520.0,
+                "CREATED"
+        ));
 
-            // Skip header
-            String line = reader.readLine();
+        shipments.add(new Shipment(
+                1002,
+                "MK-GR-002",
+                "Skopje",
+                "Thessaloniki",
+                340.0,
+                "CREATED"
+        ));
 
-            while ((line = reader.readLine()) != null) {
+        shipments.add(new Shipment(
+                1003,
+                "MK-RS-003",
+                "Skopje",
+                "Nis",
+                710.0,
+                "IN_TRANSIT"
+        ));
 
-                String[] data = line.split(",");
+        shipments.add(new Shipment(
+                1004,
+                "DE-MK-004",
+                "Berlin",
+                "Skopje",
+                1200.0,
+                "CREATED"
+        ));
 
-                int shipmentId = Integer.parseInt(data[0]);
-                String routeCode = data[1];
-                String origin = data[2];
-                String destination = data[3];
-                double weight = Double.parseDouble(data[4]);
-                String status = data[5];
+        shipments.add(new Shipment(
+                1005,
+                "MK-HR-005",
+                "Skopje",
+                "Zagreb",
+                450.0,
+                "IN_TRANSIT"
+        ));
 
-                Shipment shipment = new Shipment(
-                        shipmentId,
-                        routeCode,
-                        origin,
-                        destination,
-                        weight,
-                        status
-                );
+        shipments.add(new Shipment(
+                1006,
+                "MK-BG-006",
+                "Skopje",
+                "Sofia",
+                680.0,
+                "CREATED"
+        ));
 
-                String json = mapper.writeValueAsString(shipment);
+        shipments.add(new Shipment(
+                1007,
+                "MK-AL-007",
+                "Skopje",
+                "Tirana",
+                390.0,
+                "DELIVERED"
+        ));
+
+        shipments.add(new Shipment(
+                1008,
+                "IT-MK-008",
+                "Milan",
+                "Skopje",
+                950.0,
+                "IN_TRANSIT"
+        ));
+
+        shipments.add(new Shipment(
+                1009,
+                "MK-AT-009",
+                "Skopje",
+                "Vienna",
+                1100.0,
+                "CREATED"
+        ));
+
+        shipments.add(new Shipment(
+                1010,
+                "MK-HU-010",
+                "Skopje",
+                "Budapest",
+                870.0,
+                "CREATED"
+        ));
+
+        try (KafkaProducer<String, String> producer =
+                     new KafkaProducer<>(props)) {
+
+            for (Shipment shipment : shipments) {
+
+                String json =
+                        mapper.writeValueAsString(shipment);
 
                 ProducerRecord<String, String> record =
                         new ProducerRecord<>(
-                                TOPIC,
+                                topic,
                                 shipment.getRouteCode(),
                                 json
                         );
@@ -75,14 +144,21 @@ public class ShipmentProducer {
                 producer.send(record);
 
                 System.out.println(
-                        "Sent shipment: " + shipment.getShipmentId()
+                        "Sent shipment: "
+                                + shipment.getShipmentId()
+                                + " | Route: "
+                                + shipment.getRouteCode()
                 );
             }
+
+            producer.flush();
+
+            System.out.println(
+                    "All shipments sent successfully."
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        producer.flush();
-        producer.close();
-
-        System.out.println("All shipments sent successfully.");
     }
 }

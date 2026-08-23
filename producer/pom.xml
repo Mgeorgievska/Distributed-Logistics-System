@@ -38,6 +38,13 @@
             <version>2.0.16</version>
         </dependency>
 
+        <!-- OpenStreetMap PBF -->
+        <dependency>
+            <groupId>org.openstreetmap.pbf</groupId>
+            <artifactId>osmpbf</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
