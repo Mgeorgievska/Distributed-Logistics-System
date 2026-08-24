@@ -13,9 +13,11 @@ public class ShipmentRecord {
     private final String declarationNumber;
     private final double revenueMKD;
     private final double revenueEUR;
+    private final String routeCode;
 
     public ShipmentRecord(
             String date,
+            String routeCode,
             String carrier,
             String goods,
             String exporter,
@@ -28,6 +30,7 @@ public class ShipmentRecord {
             double revenueEUR) {
 
         this.date = date;
+        this.routeCode = routeCode;
         this.carrier = carrier;
         this.goods = goods;
         this.exporter = exporter;
@@ -43,6 +46,9 @@ public class ShipmentRecord {
     public String getDate() {
         return date;
     }
+    public String getRouteCode() {
+    return routeCode;
+}
 
     public String getCarrier() {
         return carrier;
@@ -88,6 +94,7 @@ public class ShipmentRecord {
     public String toString() {
         return "ShipmentRecord{" +
                 "date='" + date + '\'' +
+                ", routeCode='" + routeCode + '\'' +
                 ", carrier='" + carrier + '\'' +
                 ", goods='" + goods + '\'' +
                 ", exporter='" + exporter + '\'' +

@@ -109,9 +109,16 @@ public class ReportParser {
                 double eur =
                         parseNumber(revenueEUR);
 
+                /*
+                 * routeCode is intentionally empty here.
+                 *
+                 * BatchReportParser will generate the routeCode
+                 * after receiving the parsed ShipmentRecord.
+                 */
                 ShipmentRecord record =
                         new ShipmentRecord(
                                 date,
+                                "",
                                 carrier,
                                 goods,
                                 exporter,
