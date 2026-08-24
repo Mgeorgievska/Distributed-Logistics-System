@@ -23,8 +23,7 @@ public class ReportParser {
 
             if (sheet == null) {
                 System.err.println(
-                        "Sheet1 not found in: " +
-                                file.getName()
+                        "Sheet1 not found in: " + file.getName()
                 );
                 return records;
             }
@@ -33,8 +32,10 @@ public class ReportParser {
              * Row 0 = report title
              * Row 1 = column headers
              * Row 2 = previous day information
-             * Row 3+ = data/formulas
+             * Row 3+ = shipment data
              */
+
+            String date = extractDate(file.getName());
 
             for (int rowIndex = 3;
                  rowIndex <= sheet.getLastRowNum();
@@ -76,7 +77,6 @@ public class ReportParser {
                 /*
                  * Ignore completely empty rows.
                  */
-
                 if (isEmpty(
                         refNumber,
                         declarationNumber,
@@ -92,14 +92,16 @@ public class ReportParser {
                 }
 
                 /*
-                 * Extract date from file name.
+                 * Ignore summary/formula rows.
                  *
-                 * Example:
-                 * Izvestaj - 01.01.2020.xls
+                 * A real shipment should have either
+                 * a reference number or declaration number.
                  */
+                if (refNumber.isBlank()
+                        && declarationNumber.isBlank()) {
 
-                String date =
-                        extractDate(file.getName());
+                    continue;
+                }
 
                 double mkd =
                         parseNumber(revenueMKD);
@@ -128,8 +130,8 @@ public class ReportParser {
         } catch (Exception e) {
 
             System.err.println(
-                    "Error parsing report: " +
-                            file.getAbsolutePath()
+                    "Error parsing report: "
+                            + file.getAbsolutePath()
             );
 
             e.printStackTrace();
@@ -166,8 +168,8 @@ public class ReportParser {
 
         for (String value : values) {
 
-            if (value != null &&
-                    !value.isBlank()) {
+            if (value != null
+                    && !value.isBlank()) {
 
                 return false;
             }
@@ -179,8 +181,8 @@ public class ReportParser {
     private static double parseNumber(
             String value) {
 
-        if (value == null ||
-                value.isBlank()) {
+        if (value == null
+                || value.isBlank()) {
 
             return 0.0;
         }

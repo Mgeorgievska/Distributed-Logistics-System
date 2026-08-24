@@ -7,59 +7,100 @@ public class ProcessingBenchmark {
 
     public static void main(String[] args) {
 
-        int[] testSizes = {10, 20, 50, 100, 200};
+        int[] testSizes = {
+                10,
+                50,
+                100,
+                200,
+                500,
+                1000
+        };
 
         System.out.println("=================================");
         System.out.println("SHIPMENT PROCESSING BENCHMARK");
         System.out.println("=================================");
 
+        int threads =
+                Runtime.getRuntime().availableProcessors();
+
+        System.out.println(
+                "Available processors: " + threads
+        );
+
         for (int size : testSizes) {
 
             System.out.println();
             System.out.println("=================================");
-            System.out.println("TEST WITH " + size + " SHIPMENTS");
+            System.out.println(
+                    "TEST WITH " + size + " SHIPMENTS"
+            );
             System.out.println("=================================");
 
-            List<String> shipments = generateShipments(size);
+            List<String> shipments =
+                    generateShipments(size);
 
-            // Sequential
-            long sequentialStart = System.currentTimeMillis();
+            /*
+             * Sequential processing
+             */
+            ProcessingSummary sequential =
+                    SequentialProcessor.process(
+                            shipments
+                    );
 
-            SequentialProcessor.process(shipments);
+            /*
+             * Parallel processing
+             */
+            ProcessingSummary parallel =
+                    ParallelProcessor.process(
+                            shipments
+                    );
 
-            long sequentialTime =
-                    System.currentTimeMillis() - sequentialStart;
-
-            // Parallel
-            long parallelStart = System.currentTimeMillis();
-
-            ParallelProcessor.process(shipments);
-
-            long parallelTime =
-                    System.currentTimeMillis() - parallelStart;
-
-            // Metrics
+            /*
+             * Speedup
+             */
             double speedup =
-                    (double) sequentialTime / parallelTime;
+                    parallel.getTotalTime() > 0
+                            ? (double) sequential.getTotalTime()
+                            / parallel.getTotalTime()
+                            : 0;
 
-            int threads =
-                    Runtime.getRuntime().availableProcessors();
-
+            /*
+             * Parallel efficiency
+             */
             double efficiency =
-                    (speedup / threads) * 100;
+                    threads > 0
+                            ? speedup / threads * 100
+                            : 0;
+
+            /*
+             * Improvement
+             */
+            double improvement =
+                    sequential.getTotalTime() > 0
+                            ? (
+                            1.0
+                                    -
+                                    (double) parallel.getTotalTime()
+                                    / sequential.getTotalTime()
+                    ) * 100
+                            : 0;
 
             System.out.println();
-            System.out.println("----- RESULTS -----");
-            System.out.println("Shipments: " + size);
+            System.out.println("----- COMPARISON -----");
+
+            System.out.println(
+                    "Shipments: " + size
+            );
+
             System.out.println(
                     "Sequential time: "
-                            + sequentialTime
+                            + sequential.getTotalTime()
                             + " ms"
             );
 
             System.out.println(
                     "Parallel time: "
-                            + parallelTime
+                            + parallel.getTotalTime()
                             + " ms"
             );
 
@@ -69,12 +110,31 @@ public class ProcessingBenchmark {
             );
 
             System.out.printf(
-                    "Efficiency: %.2f%%%n",
+                    "Parallel efficiency: %.2f%%%n",
                     efficiency
+            );
+
+            System.out.printf(
+                    "Time improvement: %.2f%%%n",
+                    improvement
+            );
+
+            System.out.printf(
+                    "Sequential throughput: %.2f shipments/sec%n",
+                    sequential.getThroughput()
+            );
+
+            System.out.printf(
+                    "Parallel throughput: %.2f shipments/sec%n",
+                    parallel.getThroughput()
             );
 
             System.out.println(
                     "Threads: " + threads
+            );
+
+            System.out.println(
+                    "======================"
             );
         }
 
@@ -84,9 +144,11 @@ public class ProcessingBenchmark {
         System.out.println("=================================");
     }
 
-    private static List<String> generateShipments(int number) {
+    private static List<String> generateShipments(
+            int number) {
 
-        List<String> shipments = new ArrayList<>();
+        List<String> shipments =
+                new ArrayList<>();
 
         for (int i = 1; i <= number; i++) {
 

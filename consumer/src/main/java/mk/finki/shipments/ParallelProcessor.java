@@ -9,7 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 public class ParallelProcessor {
 
-    public static void process(List<String> shipments) {
+    public static ProcessingSummary process(
+            List<String> shipments) {
 
         long start = System.currentTimeMillis();
 
@@ -19,11 +20,13 @@ public class ParallelProcessor {
                 Runtime.getRuntime().availableProcessors();
 
         ExecutorService executor =
-                Executors.newFixedThreadPool(numberOfThreads);
+                Executors.newFixedThreadPool(
+                        numberOfThreads
+                );
 
-        List<Future<ProcessingResult>> futures = new ArrayList<>();
+        List<Future<ProcessingResult>> futures =
+                new ArrayList<>();
 
-        // Submit every shipment as a separate parallel task
         for (String shipment : shipments) {
 
             Future<ProcessingResult> future =
@@ -36,14 +39,13 @@ public class ParallelProcessor {
 
         int validShipments = 0;
         int invalidShipments = 0;
-        long totalProcessingTime = 0;
 
-        // Collect results
         for (Future<ProcessingResult> future : futures) {
 
             try {
 
-                ProcessingResult result = future.get();
+                ProcessingResult result =
+                        future.get();
 
                 if (result.isValid()) {
                     validShipments++;
@@ -51,14 +53,14 @@ public class ParallelProcessor {
                     invalidShipments++;
                 }
 
-                totalProcessingTime += result.getProcessingTime();
-
             } catch (Exception e) {
 
                 System.err.println(
-                        "Error getting processing result: "
+                        "Error getting result: "
                                 + e.getMessage()
                 );
+
+                invalidShipments++;
             }
         }
 
@@ -68,8 +70,7 @@ public class ParallelProcessor {
 
             if (!executor.awaitTermination(
                     5,
-                    TimeUnit.MINUTES
-            )) {
+                    TimeUnit.MINUTES)) {
 
                 executor.shutdownNow();
             }
@@ -80,15 +81,8 @@ public class ParallelProcessor {
             Thread.currentThread().interrupt();
         }
 
-        long end = System.currentTimeMillis();
-
-        long totalTime = end - start;
-
-        double averageTime =
-                shipments.isEmpty()
-                        ? 0
-                        : (double) totalProcessingTime
-                        / shipments.size();
+        long totalTime =
+                System.currentTimeMillis() - start;
 
         double throughput =
                 totalTime > 0
@@ -96,42 +90,61 @@ public class ParallelProcessor {
                         / (totalTime / 1000.0)
                         : 0;
 
+        ProcessingSummary summary =
+                new ProcessingSummary(
+                        "PARALLEL",
+                        shipments.size(),
+                        validShipments,
+                        invalidShipments,
+                        totalTime,
+                        throughput,
+                        numberOfThreads
+                );
+
+        printSummary(summary);
+
+        return summary;
+    }
+
+    private static void printSummary(
+            ProcessingSummary summary) {
+
         System.out.println("\n----- PARALLEL RESULTS -----");
 
         System.out.println(
-                "Shipments: " + shipments.size()
+                "Shipments: "
+                        + summary.getShipments()
         );
 
         System.out.println(
-                "Valid shipments: " + validShipments
+                "Valid shipments: "
+                        + summary.getValidShipments()
         );
 
         System.out.println(
-                "Invalid shipments: " + invalidShipments
+                "Invalid shipments: "
+                        + summary.getInvalidShipments()
         );
 
         System.out.println(
                 "Total processing time: "
-                        + totalTime
+                        + summary.getTotalTime()
                         + " ms"
         );
 
         System.out.printf(
-                "Average processing time: %.2f ms%n",
-                averageTime
-        );
-
-        System.out.printf(
                 "Throughput: %.2f shipments/sec%n",
-                throughput
+                summary.getThroughput()
         );
 
         System.out.println(
-                "Threads used: " + numberOfThreads
+                "Threads used: "
+                        + summary.getThreads()
         );
 
         System.out.println(
-                "Thread pool size: " + numberOfThreads
+                "Thread pool size: "
+                        + summary.getThreads()
         );
 
         System.out.println(
