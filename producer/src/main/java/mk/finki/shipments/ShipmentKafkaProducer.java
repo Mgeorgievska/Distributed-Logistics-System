@@ -18,6 +18,7 @@ public class ShipmentKafkaProducer implements AutoCloseable {
     private final ObjectMapper objectMapper;
 
     public ShipmentKafkaProducer(String bootstrapServers) {
+
         Properties properties = new Properties();
 
         properties.put(
@@ -51,47 +52,54 @@ public class ShipmentKafkaProducer implements AutoCloseable {
 
     public RecordMetadata send(ShipmentRecord shipment) throws Exception {
 
-        String key = createKey(shipment);
-        String json = objectMapper.writeValueAsString(shipment);
+        /*
+         * routeCode is used as the Kafka message key.
+         *
+         * This allows all shipments belonging to the same
+         * route to be consistently assigned to the same
+         * Kafka partition.
+         */
+        String key = shipment.getRouteCode();
+
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Shipment routeCode cannot be empty."
+            );
+        }
+
+        String json =
+                objectMapper.writeValueAsString(shipment);
 
         ProducerRecord<String, String> record =
-                new ProducerRecord<>(TOPIC, key, json);
+                new ProducerRecord<>(
+                        TOPIC,
+                        key,
+                        json
+                );
 
-        Future<RecordMetadata> future = producer.send(record);
+        Future<RecordMetadata> future =
+                producer.send(record);
 
-        RecordMetadata metadata = future.get();
+        RecordMetadata metadata =
+                future.get();
 
         System.out.println(
                 "Sent shipment | key=" + key +
-                " | partition=" + metadata.partition() +
-                " | offset=" + metadata.offset()
+                        " | partition=" + metadata.partition() +
+                        " | offset=" + metadata.offset()
         );
 
         return metadata;
     }
 
-    public void sendAll(List<ShipmentRecord> shipments) throws Exception {
+    public void sendAll(
+            List<ShipmentRecord> shipments) throws Exception {
 
         for (ShipmentRecord shipment : shipments) {
             send(shipment);
         }
 
         producer.flush();
-    }
-
-    private String createKey(ShipmentRecord shipment) {
-
-        if (shipment.getDeclarationNumber() != null
-                && !shipment.getDeclarationNumber().isBlank()) {
-
-            return shipment.getDeclarationNumber();
-        }
-
-        return shipment.getDate()
-                + "-"
-                + shipment.getCarrier()
-                + "-"
-                + shipment.getImporter();
     }
 
     @Override
