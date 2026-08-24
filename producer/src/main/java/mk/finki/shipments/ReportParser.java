@@ -102,36 +102,53 @@ public class ReportParser {
 
                     continue;
                 }
+                if (exporter.isBlank()
+        || importer.isBlank()
+        || exporter.contains("SUM")
+        || importer.contains("SUM")) {
+
+    continue;
+}
 
                 double mkd =
-                        parseNumber(revenueMKD);
+        parseNumber(revenueMKD);
 
-                double eur =
-                        parseNumber(revenueEUR);
+double eur =
+        parseNumber(revenueEUR);
 
-                /*
-                 * routeCode is intentionally empty here.
-                 *
-                 * BatchReportParser will generate the routeCode
-                 * after receiving the parsed ShipmentRecord.
-                 */
-                ShipmentRecord record =
-                        new ShipmentRecord(
-                                date,
-                                "",
-                                carrier,
-                                goods,
-                                exporter,
-                                "",
-                                importer,
-                                "",
-                                declarationNumber,
-                                refNumber,
-                                mkd,
-                                eur
-                        );
+String routeCode =
+        exporter.trim() + "->" + importer.trim();
 
-                records.add(record);
+        if (exporter.contains("SUM")
+        || importer.contains("SUM")
+        || exporter.isBlank()
+        || importer.isBlank()) {
+
+    System.out.println(
+            "WARNING INVALID ROUTE"
+                    + " | date=" + date
+                    + " | exporter=" + exporter
+                    + " | importer=" + importer
+    );
+}
+
+ShipmentRecord record =
+        new ShipmentRecord(
+                date,
+                routeCode,
+                carrier,
+                goods,
+                exporter,
+                "",
+                importer,
+                "",
+                declarationNumber,
+                refNumber,
+                mkd,
+                eur
+        );
+
+records.add(record);
             }
 
         } catch (Exception e) {

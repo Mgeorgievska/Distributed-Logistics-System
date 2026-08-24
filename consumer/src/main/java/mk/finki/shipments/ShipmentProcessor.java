@@ -1,49 +1,53 @@
 package mk.finki.shipments;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class ShipmentProcessor {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static ProcessingResult process(
+            ShipmentRecord shipment) {
 
-    public static ProcessingResult process(String json) {
-
-        long startTime = System.currentTimeMillis();
+        long startTime =
+                System.currentTimeMillis();
 
         try {
 
-            // Convert JSON string to Shipment object
-            Shipment shipment = objectMapper.readValue(json, Shipment.class);
+            /*
+             * Validate real shipment data.
+             */
+            boolean valid =
+                    validateShipment(shipment);
 
-            // Validate shipment
-            boolean valid = validateShipment(shipment);
+            /*
+             * Calculate processing score.
+             */
+            double score =
+                    calculateScore(shipment);
 
-            // Calculate shipment score
-            double score = calculateScore(shipment);
-
-            // Simulate processing work
+            /*
+             * Simulate processing work.
+             *
+             * This is intentionally included so that
+             * the difference between sequential and
+             * parallel processing becomes measurable.
+             */
             Thread.sleep(100);
 
             long processingTime =
-                    System.currentTimeMillis() - startTime;
+                    System.currentTimeMillis()
+                            - startTime;
 
-            System.out.println(
-                    "Processed shipment: "
-                            + "ID=" + shipment.getShipmentId()
-                            + " | Route=" + shipment.getRouteCode()
-                            + " | " + shipment.getOrigin()
-                            + " -> " + shipment.getDestination()
-                            + " | Weight=" + shipment.getWeight()
-                            + " kg"
-                            + " | Status=" + shipment.getStatus()
-                            + " | Valid=" + valid
-                            + " | Score=" + score
-                            + " | Thread=" + Thread.currentThread().getName()
-                            + " | Time=" + processingTime + " ms"
-            );
+            /*
+             * Do NOT print every shipment here.
+             *
+             * The benchmark will print only the
+             * final processing statistics.
+             */
 
+            /*
+             * ShipmentRecord does not currently have
+             * shipmentId, so routeCode is used as identifier.
+             */
             return new ProcessingResult(
-                    shipment.getShipmentId(),
+                    shipment.getRouteCode(),
                     valid,
                     score,
                     processingTime,
@@ -52,28 +56,28 @@ public class ShipmentProcessor {
 
         } catch (Exception e) {
 
-            System.out.println(
+            System.err.println(
                     "Error processing shipment: "
                             + e.getMessage()
             );
 
             return new ProcessingResult(
-                    -1,
+                    shipment != null
+                            ? shipment.getRouteCode()
+                            : "",
                     false,
                     0.0,
-                    System.currentTimeMillis() - startTime,
+                    System.currentTimeMillis()
+                            - startTime,
                     Thread.currentThread().getName()
             );
         }
     }
 
-    private static boolean validateShipment(Shipment shipment) {
+    private static boolean validateShipment(
+            ShipmentRecord shipment) {
 
         if (shipment == null) {
-            return false;
-        }
-
-        if (shipment.getShipmentId() <= 0) {
             return false;
         }
 
@@ -82,49 +86,44 @@ public class ShipmentProcessor {
             return false;
         }
 
-        if (shipment.getOrigin() == null
-                || shipment.getOrigin().isBlank()) {
+        if (shipment.getCarrier() == null
+                || shipment.getCarrier().isBlank()) {
             return false;
         }
 
-        if (shipment.getDestination() == null
-                || shipment.getDestination().isBlank()) {
+        if (shipment.getExporter() == null
+                || shipment.getExporter().isBlank()) {
             return false;
         }
 
-        if (shipment.getWeight() <= 0) {
-            return false;
-        }
-
-        if (shipment.getStatus() == null
-                || shipment.getStatus().isBlank()) {
+        if (shipment.getImporter() == null
+                || shipment.getImporter().isBlank()) {
             return false;
         }
 
         return true;
     }
 
-    private static double calculateScore(Shipment shipment) {
+    private static double calculateScore(
+            ShipmentRecord shipment) {
 
-        double score = shipment.getWeight();
+        double score = 0.0;
 
-        switch (shipment.getStatus().toUpperCase()) {
+        /*
+         * Revenue contributes to the score.
+         */
+        score += shipment.getRevenueMKD();
 
-            case "DELIVERED":
-                score *= 0.8;
-                break;
+        score +=
+                shipment.getRevenueEUR() * 61.5;
 
-            case "IN_TRANSIT":
-                score *= 1.1;
-                break;
-
-            case "CREATED":
-                score *= 1.0;
-                break;
-
-            default:
-                score *= 0.5;
-                break;
+        /*
+         * Route code gives a small deterministic
+         * contribution based on its length.
+         */
+        if (shipment.getRouteCode() != null) {
+            score +=
+                    shipment.getRouteCode().length() * 10;
         }
 
         return score;

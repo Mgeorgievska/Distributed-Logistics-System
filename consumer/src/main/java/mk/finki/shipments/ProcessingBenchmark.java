@@ -1,11 +1,16 @@
 package mk.finki.shipments;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProcessingBenchmark {
 
-    public static void main(String[] args) {
+    private static final ObjectMapper objectMapper =
+            new ObjectMapper();
+
+    public static void main(String[] args) throws Exception {
 
         int[] testSizes = {
                 10,
@@ -36,45 +41,35 @@ public class ProcessingBenchmark {
             );
             System.out.println("=================================");
 
-            List<String> shipments =
+            List<ShipmentRecord> shipments =
                     generateShipments(size);
 
-            /*
-             * Sequential processing
-             */
+            // Sequential
             ProcessingSummary sequential =
                     SequentialProcessor.process(
                             shipments
                     );
 
-            /*
-             * Parallel processing
-             */
+            // Parallel
             ProcessingSummary parallel =
                     ParallelProcessor.process(
                             shipments
                     );
 
-            /*
-             * Speedup
-             */
+            // Speedup
             double speedup =
                     parallel.getTotalTime() > 0
                             ? (double) sequential.getTotalTime()
                             / parallel.getTotalTime()
                             : 0;
 
-            /*
-             * Parallel efficiency
-             */
+            // Efficiency
             double efficiency =
                     threads > 0
                             ? speedup / threads * 100
                             : 0;
 
-            /*
-             * Improvement
-             */
+            // Improvement
             double improvement =
                     sequential.getTotalTime() > 0
                             ? (
@@ -144,23 +139,35 @@ public class ProcessingBenchmark {
         System.out.println("=================================");
     }
 
-    private static List<String> generateShipments(
-            int number) {
+    private static List<ShipmentRecord> generateShipments(
+            int number) throws Exception {
 
-        List<String> shipments =
+        List<ShipmentRecord> shipments =
                 new ArrayList<>();
 
         for (int i = 1; i <= number; i++) {
 
-            String shipment =
+            String json =
                     "{"
-                            + "\"shipmentId\":" + i + ","
+                            + "\"date\":\"24.08.2026\","
                             + "\"routeCode\":\"TEST-" + i + "\","
-                            + "\"origin\":\"Skopje\","
-                            + "\"destination\":\"Belgrade\","
-                            + "\"weight\":500.0,"
-                            + "\"status\":\"CREATED\""
+                            + "\"carrier\":\"Test Carrier\","
+                            + "\"goods\":\"Test Goods\","
+                            + "\"exporter\":\"Test Exporter\","
+                            + "\"exporterCountry\":\"MK\","
+                            + "\"importer\":\"Test Importer\","
+                            + "\"importerCountry\":\"RS\","
+                            + "\"declarationType\":\"TEST\","
+                            + "\"declarationNumber\":\"TEST-" + i + "\","
+                            + "\"revenueMKD\":500.0,"
+                            + "\"revenueEUR\":8.0"
                             + "}";
+
+            ShipmentRecord shipment =
+                    objectMapper.readValue(
+                            json,
+                            ShipmentRecord.class
+                    );
 
             shipments.add(shipment);
         }

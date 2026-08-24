@@ -3,6 +3,7 @@ package mk.finki.shipments;
 public class ShipmentRecord {
 
     private String date;
+    private String routeCode;
     private String carrier;
     private String goods;
     private String exporter;
@@ -13,10 +14,8 @@ public class ShipmentRecord {
     private String declarationNumber;
     private double revenueMKD;
     private double revenueEUR;
-    private String routeCode;
 
-    public ShipmentRecord(){
-
+    public ShipmentRecord() {
     }
 
     public ShipmentRecord(
@@ -47,15 +46,13 @@ public class ShipmentRecord {
         this.revenueEUR = revenueEUR;
     }
 
-    
-
-
     public String getDate() {
         return date;
     }
+
     public String getRouteCode() {
-    return routeCode;
-}
+        return routeCode;
+    }
 
     public String getCarrier() {
         return carrier;
@@ -93,58 +90,9 @@ public class ShipmentRecord {
         return revenueMKD;
     }
 
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public void setCarrier(String carrier) {
-        this.carrier = carrier;
-    }
-
-    public void setGoods(String goods) {
-        this.goods = goods;
-    }
-
-    public void setExporter(String exporter) {
-        this.exporter = exporter;
-    }
-
-    public void setExporterCountry(String exporterCountry) {
-        this.exporterCountry = exporterCountry;
-    }
-
-    public void setImporter(String importer) {
-        this.importer = importer;
-    }
-
-    public void setImporterCountry(String importerCountry) {
-        this.importerCountry = importerCountry;
-    }
-
-    public void setDeclarationType(String declarationType) {
-        this.declarationType = declarationType;
-    }
-
-    public void setDeclarationNumber(String declarationNumber) {
-        this.declarationNumber = declarationNumber;
-    }
-
-    public void setRevenueMKD(double revenueMKD) {
-        this.revenueMKD = revenueMKD;
-    }
-
-    public void setRevenueEUR(double revenueEUR) {
-        this.revenueEUR = revenueEUR;
-    }
-
-    public void setRouteCode(String routeCode) {
-        this.routeCode = routeCode;
-    }
-
     public double getRevenueEUR() {
         return revenueEUR;
     }
-    
 
     @Override
     public String toString() {

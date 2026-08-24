@@ -83,24 +83,43 @@ public class ShipmentKafkaProducer implements AutoCloseable {
         RecordMetadata metadata =
                 future.get();
 
-        System.out.println(
-                "Sent shipment | key=" + key +
-                        " | partition=" + metadata.partition() +
-                        " | offset=" + metadata.offset()
-        );
+    
 
         return metadata;
     }
 
     public void sendAll(
-            List<ShipmentRecord> shipments) throws Exception {
+        List<ShipmentRecord> shipments) throws Exception {
 
-        for (ShipmentRecord shipment : shipments) {
-            send(shipment);
+    int total = shipments.size();
+    int sent = 0;
+
+    for (ShipmentRecord shipment : shipments) {
+
+        send(shipment);
+
+        sent++;
+
+        if (sent % 500 == 0 || sent == total) {
+
+            System.out.println(
+                    "Progress: "
+                            + sent
+                            + " / "
+                            + total
+                            + " shipments sent"
+            );
         }
-
-        producer.flush();
     }
+
+    producer.flush();
+
+    System.out.println(
+            "Successfully sent "
+                    + total
+                    + " shipments to Kafka."
+    );
+}
 
     @Override
     public void close() {

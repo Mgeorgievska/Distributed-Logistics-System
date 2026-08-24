@@ -7,6 +7,7 @@ import java.util.List;
 public class ReportBatchParser {
 
     public static List<ShipmentRecord> parseDirectory(File directory) {
+        
 
         List<ShipmentRecord> allRecords = new ArrayList<>();
 

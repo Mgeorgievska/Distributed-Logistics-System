@@ -143,12 +143,7 @@ public class ShipmentProducer {
 
                 producer.send(record);
 
-                System.out.println(
-                        "Sent shipment: "
-                                + shipment.getShipmentId()
-                                + " | Route: "
-                                + shipment.getRouteCode()
-                );
+        
             }
 
             producer.flush();

@@ -10,14 +10,14 @@ import java.util.concurrent.TimeUnit;
 public class ParallelProcessor {
 
     public static ProcessingSummary process(
-            List<String> shipments) {
+            List<ShipmentRecord> shipments) {
 
-        long start = System.currentTimeMillis();
-
-        System.out.println("\n=== PARALLEL PROCESSING ===");
+        long start =
+                System.currentTimeMillis();
 
         int numberOfThreads =
-                Runtime.getRuntime().availableProcessors();
+                Runtime.getRuntime()
+                        .availableProcessors();
 
         ExecutorService executor =
                 Executors.newFixedThreadPool(
@@ -27,11 +27,16 @@ public class ParallelProcessor {
         List<Future<ProcessingResult>> futures =
                 new ArrayList<>();
 
-        for (String shipment : shipments) {
+        /*
+         * Submit every shipment as a separate task.
+         */
+        for (ShipmentRecord shipment : shipments) {
 
             Future<ProcessingResult> future =
                     executor.submit(
-                            () -> ShipmentProcessor.process(shipment)
+                            () -> ShipmentProcessor.process(
+                                    shipment
+                            )
                     );
 
             futures.add(future);
@@ -40,6 +45,9 @@ public class ParallelProcessor {
         int validShipments = 0;
         int invalidShipments = 0;
 
+        /*
+         * Collect results.
+         */
         for (Future<ProcessingResult> future : futures) {
 
             try {
@@ -56,7 +64,7 @@ public class ParallelProcessor {
             } catch (Exception e) {
 
                 System.err.println(
-                        "Error getting result: "
+                        "Error processing shipment: "
                                 + e.getMessage()
                 );
 
@@ -78,11 +86,14 @@ public class ParallelProcessor {
         } catch (InterruptedException e) {
 
             executor.shutdownNow();
-            Thread.currentThread().interrupt();
+
+            Thread.currentThread()
+                    .interrupt();
         }
 
         long totalTime =
-                System.currentTimeMillis() - start;
+                System.currentTimeMillis()
+                        - start;
 
         double throughput =
                 totalTime > 0
@@ -109,7 +120,10 @@ public class ParallelProcessor {
     private static void printSummary(
             ProcessingSummary summary) {
 
-        System.out.println("\n----- PARALLEL RESULTS -----");
+        System.out.println();
+        System.out.println(
+                "----- PARALLEL RESULTS -----"
+        );
 
         System.out.println(
                 "Shipments: "
@@ -139,11 +153,6 @@ public class ParallelProcessor {
 
         System.out.println(
                 "Threads used: "
-                        + summary.getThreads()
-        );
-
-        System.out.println(
-                "Thread pool size: "
                         + summary.getThreads()
         );
 

@@ -2,14 +2,14 @@ package mk.finki.shipments;
 
 public class ProcessingResult {
 
-    private final int shipmentId;
+    private final String shipmentId;
     private final boolean valid;
     private final double score;
     private final long processingTime;
     private final String threadName;
 
     public ProcessingResult(
-            int shipmentId,
+            String shipmentId,
             boolean valid,
             double score,
             long processingTime,
@@ -22,7 +22,7 @@ public class ProcessingResult {
         this.threadName = threadName;
     }
 
-    public int getShipmentId() {
+    public String getShipmentId() {
         return shipmentId;
     }
 

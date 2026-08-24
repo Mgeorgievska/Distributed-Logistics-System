@@ -4,16 +4,16 @@ import java.util.List;
 
 public class SequentialProcessor {
 
-    public static ProcessingSummary process(List<String> shipments) {
+    public static ProcessingSummary process(
+            List<ShipmentRecord> shipments) {
 
-        long start = System.currentTimeMillis();
-
-        System.out.println("\n=== SEQUENTIAL PROCESSING ===");
+        long start =
+                System.currentTimeMillis();
 
         int validShipments = 0;
         int invalidShipments = 0;
 
-        for (String shipment : shipments) {
+        for (ShipmentRecord shipment : shipments) {
 
             ProcessingResult result =
                     ShipmentProcessor.process(shipment);
@@ -53,7 +53,10 @@ public class SequentialProcessor {
     private static void printSummary(
             ProcessingSummary summary) {
 
-        System.out.println("\n----- SEQUENTIAL RESULTS -----");
+        System.out.println();
+        System.out.println(
+                "----- SEQUENTIAL RESULTS -----"
+        );
 
         System.out.println(
                 "Shipments: "
